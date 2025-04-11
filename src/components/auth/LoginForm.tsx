@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { useAuth } from "../../../supabase/auth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
@@ -9,26 +8,25 @@ import {
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { useNavigate, Link } from "react-router-dom";
 import AuthLayout from "./AuthLayout";
-import { LogIn } from "lucide-react";
+import { Mail } from "lucide-react";
+import { getGmailAuthUrl } from "@/services/gmailService";
 
 export default function LoginForm() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const { signIn } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await signIn(email, password);
-      navigate("/");
-    } catch (error) {
-      setError("Invalid email or password");
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
     }
+  }, [user, navigate]);
+
+  const handleGmailLogin = () => {
+    // Redirect to Gmail OAuth flow
+    window.location.href = getGmailAuthUrl();
   };
 
   return (
@@ -36,43 +34,46 @@ export default function LoginForm() {
       <Card className="w-full">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl text-center flex items-center justify-center gap-2">
-            <LogIn className="h-5 w-5" /> Sign in
+            <Mail className="h-5 w-5" /> Sign in with Gmail
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-4">
+            <p className="text-center text-sm text-muted-foreground">
+              Connect your Gmail account to start decluttering your inbox
+            </p>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="name@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+              <Button
+                onClick={handleGmailLogin}
+                className="w-full rock-button"
+                size="lg"
+              >
+                <Mail className="mr-2 h-4 w-4" /> Continue with Gmail
+              </Button>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">
+                  Secure Authentication
+                </span>
+              </div>
             </div>
-            {error && <p className="text-sm text-red-500">{error}</p>}
-            <Button type="submit" className="w-full">
-              Sign in
-            </Button>
-          </form>
+            <div className="text-xs text-center text-muted-foreground">
+              <p>
+                We only request the permissions needed to help you declutter
+                your inbox.
+              </p>
+              <p>Your data is never shared with third parties.</p>
+            </div>
+          </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <div className="text-sm text-center text-slate-600">
             Don't have an account?{" "}
-            <Link to="/signup" className="text-primary hover:underline">
+            <Link to="/signup" className="text-rock hover:underline">
               Sign up
             </Link>
           </div>
